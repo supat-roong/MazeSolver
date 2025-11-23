@@ -11,10 +11,10 @@ public:
     // Add this accessor inside the class
     const std::vector<std::vector<int>>& getMaze() const;
 
-    static const int N;
-    static const int S;
-    static const int E;
-    static const int W;
+    static constexpr int N = 1;
+    static constexpr int S = 2;
+    static constexpr int E = 4;
+    static constexpr int W = 8;
 
 private:
     int w, h; // maze width and height

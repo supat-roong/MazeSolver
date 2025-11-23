@@ -51,5 +51,14 @@ int main(int argc, char* argv[]) {
         std::cout << "No path found!\n";
     }
 
+    if (solver.solveAStar()) {
+        std::cout << "\nA* Maze Solution Path:\n";
+        solver.printPath();  // prints the maze with path using '*'
+        std::cout << "Max visit order (A*): " << solver.maxVisitOrder() << "\n";
+        std::cout << "A* Path length: " << solver.getPathLength() << "\n";
+    } else {
+        std::cout << "No path found!\n";
+    }
+
     return 0;
 }

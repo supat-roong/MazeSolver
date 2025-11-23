@@ -23,11 +23,6 @@ bool MazeSolver::solveDFS() {
 
     std::vector<std::vector<std::pair<int,int>>> parent(h, std::vector<std::pair<int,int>>(w, {-1,-1}));
 
-    const int dx[4] = {0,0,1,-1};
-    const int dy[4] = {-1,1,0,0};
-    const int dir[4] = {MazeGenerator::N, MazeGenerator::S, MazeGenerator::E, MazeGenerator::W};
-    const int opp[4] = {MazeGenerator::S, MazeGenerator::N, MazeGenerator::W, MazeGenerator::E};
-
     std::function<bool(int,int)> dfs = [&](int x, int y) -> bool {
         visitOrder[y][x] = count++;
         if (x == w-1 && y == h-1)
@@ -78,11 +73,6 @@ bool MazeSolver::solveBFS() {
     visitOrder.assign(h,std::vector<int>(w,0));
     visitOrder[0][0] = count++;
 
-    const int dx[4] = {0,0,1,-1};
-    const int dy[4] = {-1,1,0,0};
-    const int dir[4] = {MazeGenerator::N, MazeGenerator::S, MazeGenerator::E, MazeGenerator::W};
-    const int opp[4] = {MazeGenerator::S, MazeGenerator::N, MazeGenerator::W, MazeGenerator::E};
-
     while(!q.empty()) {
         auto [x,y] = q.front(); q.pop();
 
@@ -113,6 +103,73 @@ bool MazeSolver::solveBFS() {
         }
     }
     return false;
+}
+
+bool MazeSolver::solveAStar() {
+    path.clear();
+    visitOrder.assign(h, std::vector<int>(w, 0));
+
+    // Heuristic: Manhattan distance
+    auto heuristic = [](int x1, int y1, int x2, int y2) {
+        return std::abs(x1 - x2) + std::abs(y1 - y2);
+    };
+
+    struct Node {
+        int x, y;
+        int g; // cost from start
+        int f; // g + heuristic
+        bool operator>(const Node &other) const { return f > other.f; }
+    };
+
+    std::priority_queue<Node, std::vector<Node>, std::greater<>> openSet;
+    std::vector<std::vector<int>> gScore(h, std::vector<int>(w, INT_MAX));
+    std::vector<std::vector<std::pair<int,int>>> parent(h, std::vector<std::pair<int,int>>(w, {-1,-1}));
+
+    gScore[0][0] = 0;
+    openSet.push({0, 0, 0, heuristic(0,0,w-1,h-1)});
+    int count = 1;
+
+    while(!openSet.empty()) {
+        Node cur = openSet.top(); openSet.pop();
+        int x = cur.x, y = cur.y;
+
+        // Mark visit order
+        if(visitOrder[y][x] == 0)
+            visitOrder[y][x] = count++;
+
+        if(x == w-1 && y == h-1) break; // reached goal
+
+        for(int i=0;i<4;i++) {
+            int nx = x + dx[i];
+            int ny = y + dy[i];
+            if(nx<0 || nx>=w || ny<0 || ny>=h) continue;
+
+            // Only move if there is a passage
+            if((grid[y][x] & dir[i]) == 0 || (grid[ny][nx] & opp[i]) == 0) continue;
+
+            int tentative_g = gScore[y][x] + 1;
+            if(tentative_g < gScore[ny][nx]) {
+                gScore[ny][nx] = tentative_g;
+                parent[ny][nx] = {x,y};
+                int f = tentative_g + heuristic(nx,ny,w-1,h-1);
+                openSet.push({nx, ny, tentative_g, f});
+            }
+        }
+    }
+
+    // Reconstruct path
+    int cx = w-1, cy = h-1;
+    if(parent[cy][cx].first == -1 && parent[cy][cx].second == -1 && !(cx==0 && cy==0))
+        return false; // no path found
+
+    while(cx != -1 && cy != -1){
+        path.push_back({cx,cy});
+        auto p = parent[cy][cx];
+        cx = p.first;
+        cy = p.second;
+    }
+    std::reverse(path.begin(), path.end());
+    return true;
 }
 
 

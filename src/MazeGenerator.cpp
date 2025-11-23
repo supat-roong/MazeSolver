@@ -5,12 +5,6 @@
 #include <algorithm>
 #include <functional>
 
-// Define static direction constants
-const int MazeGenerator::N = 1;
-const int MazeGenerator::S = 2;
-const int MazeGenerator::E = 4;
-const int MazeGenerator::W = 8;
-
 MazeGenerator::MazeGenerator(int width, int height, double monteCarloCarveProbability) : w(width), h(height), p(monteCarloCarveProbability){
     grid.assign(h, std::vector<int>(w, 0));
 }
