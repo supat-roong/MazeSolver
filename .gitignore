@@ -40,5 +40,5 @@
 # debug information files
 *.dwo
 
-
+# ignore build folder
 build/
