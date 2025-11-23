@@ -9,21 +9,27 @@
 int main(int argc, char* argv[]) {
     int width = 20;
     int height = 20;
+    double monteCarloCarveProbability = 0.1;
 
-    // Parse width and height from command-line arguments
+    // Parse maze parameters from command-line arguments
+    if (argc >= 2) {
+        int w = std::atoi(argv[1]);
+        if (w > 0) width = w;
+    }
+    
     if (argc >= 3) {
-        width = std::atoi(argv[1]);
-        height = std::atoi(argv[2]);
-        if(width <= 0) width = 20;
-        if(height <= 0) height = 20;
+        int h = std::atoi(argv[2]);
+        if (h > 0) height = h;
+    }
+    
+    if (argc >= 4) {
+        double p = std::atof(argv[3]);
+        if (p >= 0.0 && p <= 1.0) monteCarloCarveProbability = p;
     }
 
     // Generate maze
-    MazeGenerator mg(width, height);
+    MazeGenerator mg(width, height, monteCarloCarveProbability);
     mg.generate();
-
-    std::cout << "Generated Maze:\n";
-    mg.print();
 
     // Solve maze
     MazeSolver solver(mg);

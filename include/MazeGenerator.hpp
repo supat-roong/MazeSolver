@@ -3,8 +3,9 @@
 
 class MazeGenerator {
 public:
-    MazeGenerator(int width, int height);
+    MazeGenerator(int width, int height, double monteCarloCarveProbability);
     void generate();
+    void monteCarloCarve(double probability);
     void print() const;
 
     // Add this accessor inside the class
@@ -16,6 +17,7 @@ public:
     static const int W;
 
 private:
-    int w, h;
+    int w, h; // maze width and height
+    double p; // Monte Carlo carving probability
     std::vector<std::vector<int>> grid;
 };

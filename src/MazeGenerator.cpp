@@ -11,7 +11,7 @@ const int MazeGenerator::S = 2;
 const int MazeGenerator::E = 4;
 const int MazeGenerator::W = 8;
 
-MazeGenerator::MazeGenerator(int width, int height) : w(width), h(height) {
+MazeGenerator::MazeGenerator(int width, int height, double monteCarloCarveProbability) : w(width), h(height), p(monteCarloCarveProbability){
     grid.assign(h, std::vector<int>(w, 0));
 }
 
@@ -52,7 +52,60 @@ void MazeGenerator::generate() {
 
     // Start DFS from top-left
     dfs(0, 0);
+    std::cout << "Generated Perfect Maze with DFS Backtracking:\n";
+    print();
+
+    // Monte Carlo carving
+    monteCarloCarve(p);
+
+    std::cout << "Generated Maze after Monte Carlo Carving:\n";
+    print();
 }
+
+void MazeGenerator::monteCarloCarve(double probability) {
+    std::mt19937 rng(std::random_device{}());
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+    // Possible directions: N,S,E,W
+    std::vector<std::pair<int,int>> directions = {{0,-1},{0,1},{1,0},{-1,0}};
+    std::vector<int> dir_flags = {N, S, E, W};
+    std::vector<int> opposite  = {S, N, W, E};
+
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            
+            if (dist(rng) > probability)
+                continue; // skip this cell
+
+            // --- Find all valid neighbors for potential carving ---
+            std::vector<int> candidates;
+            for (int i = 0; i < 4; ++i) {
+                int nx = x + directions[i].first;
+                int ny = y + directions[i].second;
+
+                if (nx < 0 || nx >= w || ny < 0 || ny >= h)
+                    continue; // out of bounds
+                if (grid[y][x] & dir_flags[i])
+                    continue; // already connected
+
+                candidates.push_back(i); // valid direction
+            }
+
+            if (candidates.empty())
+                continue; // no valid walls to carve
+
+            // Pick a random valid wall
+            int i = candidates[rng() % candidates.size()];
+            int nx = x + directions[i].first;
+            int ny = y + directions[i].second;
+
+            // Carve the passage (creates a loop)
+            grid[y][x]   |= dir_flags[i];
+            grid[ny][nx] |= opposite[i];
+        }
+    }
+}
+
 
 void MazeGenerator::print() const {
     // Top border
