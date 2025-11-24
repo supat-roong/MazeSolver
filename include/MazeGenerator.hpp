@@ -4,7 +4,7 @@
 class MazeGenerator {
 public:
     MazeGenerator(int width, int height, double monteCarloCarveProbability);
-    void generate();
+    void generate(bool verbose = true);
     void monteCarloCarve(double probability);
     void print() const;
 

@@ -10,6 +10,10 @@ int main(int argc, char* argv[]) {
     int width = 20;
     int height = 20;
     double monteCarloCarveProbability = 0.1;
+    int maxDepth=4;
+    int inputSize = 4*maxDepth*3+2;
+    int hiddenSize = 64;
+    int numActions = 4;
 
     // Parse maze parameters from command-line arguments
     if (argc >= 2) {
@@ -26,6 +30,14 @@ int main(int argc, char* argv[]) {
         double p = std::atof(argv[3]);
         if (p >= 0.0 && p <= 1.0) monteCarloCarveProbability = p;
     }
+
+    // ----- Load model for testing -----
+    HumanEyeSolver agent(maxDepth);
+    DQN testNet(inputSize, hiddenSize, numActions); // new instance
+    torch::serialize::InputArchive in_archive;
+    in_archive.load_from("dqn_maze_weights.pt");
+    testNet->load(in_archive);
+    std::cout << "Loaded trained weights\n";
 
     // Generate maze
     MazeGenerator mg(width, height, monteCarloCarveProbability);
@@ -59,6 +71,15 @@ int main(int argc, char* argv[]) {
     } else {
         std::cout << "No path found!\n";
     }
+
+    if (solver.solveWithAgent(testNet, agent, 0.0f)) {
+        std::cout << "Agent solved the maze!\n";
+    } else {
+        std::cout << "Agent could not solve the maze.\n";
+    }
+    solver.printPath(); // works perfectly
+    std::cout << "Max visit order (DQN): " << solver.maxVisitOrder() << "\n";
+    std::cout << "DQN Path length: " << solver.getPathLength() << "\n";
 
     return 0;
 }

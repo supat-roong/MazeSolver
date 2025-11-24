@@ -1,5 +1,7 @@
 #pragma once
 #include "MazeGenerator.hpp"
+#include "DQN.hpp"
+#include "HumanEyeSolver.hpp"
 #include <vector>
 
 class MazeSolver {
@@ -14,6 +16,8 @@ public:
     // Solve maze using A*
     bool solveAStar();
 
+    bool solveWithAgent(DQN& agentNet, HumanEyeSolver& agent, float epsilon = 0);
+
     // Print maze with path overlay and visit numbers
     void printPath() const;
 
@@ -23,13 +27,14 @@ public:
     // Return the maximum visit number after DFS or BFS
     int maxVisitOrder() const;
 
+    static constexpr int dx[4] = {0,0,1,-1};
+    static constexpr int dy[4] = {-1,1,0,0};
+    static constexpr int dir[4] = {MazeGenerator::N, MazeGenerator::S, MazeGenerator::E, MazeGenerator::W};
+    static constexpr int opp[4] = {MazeGenerator::S, MazeGenerator::N, MazeGenerator::W, MazeGenerator::E};
+
 private:
     const std::vector<std::vector<int>>& grid;
     int h, w;
     std::vector<std::pair<int,int>> path; // solution path
     std::vector<std::vector<int>> visitOrder; // visit order per cell
-    static constexpr int dx[4] = {0,0,1,-1};
-    static constexpr int dy[4] = {-1,1,0,0};
-    static constexpr int dir[4] = {MazeGenerator::N, MazeGenerator::S, MazeGenerator::E, MazeGenerator::W};
-    static constexpr int opp[4] = {MazeGenerator::S, MazeGenerator::N, MazeGenerator::W, MazeGenerator::E};
 };

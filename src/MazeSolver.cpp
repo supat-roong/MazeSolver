@@ -1,4 +1,8 @@
 #include "MazeSolver.hpp"
+#include "DQN.hpp"
+#include "HumanEyeSolver.hpp"
+#include <torch/torch.h>
+#include <random>
 #include <iostream>
 #include <queue>
 #include <stack>
@@ -170,6 +174,77 @@ bool MazeSolver::solveAStar() {
     }
     std::reverse(path.begin(), path.end());
     return true;
+}
+
+bool MazeSolver::solveWithAgent(DQN& agentNet, HumanEyeSolver& agent, float epsilon /*optional*/) {
+    path.clear();
+    visitOrder.assign(h, std::vector<int>(w, 0));
+
+    int x = 0, y = 0;
+    path.push_back({x, y});
+    int step = 0;
+    const int maxSteps = w * h * 2; // safe upper limit
+    int count = 1;
+
+    std::mt19937 rng(std::random_device{}());
+    std::uniform_real_distribution<float> uni(0.0f, 1.0f);
+
+    while (step < maxSteps && !(x == w - 1 && y == h - 1)) {
+        visitOrder[y][x] = count++;
+
+        auto obs = agent.flattenObservation(x, y, grid);
+        torch::Tensor state = torch::tensor(obs, torch::kFloat).unsqueeze(0);
+
+        int action;
+        std::vector<int> validActions;
+        for(int a = 0; a < 4; a++) {
+            int nx = x + dx[a];
+            int ny = y + dy[a];
+
+            // Check bounds and if wall allows movement
+            if(nx >= 0 && nx < w && ny >= 0 && ny < h && (grid[y][x] & MazeSolver::dir[a]) != 0) {
+                validActions.push_back(a);
+            }
+        }
+        
+        if (uni(rng) < epsilon) {
+            std::uniform_int_distribution<int> dist(0, validActions.size() - 1);
+            action = validActions[dist(rng)];
+        } else {
+            // Greedy: select best among valid actions only
+            auto qvals = agentNet->forward(state).squeeze(0); // flatten to 1D
+            float maxQ = -1e9;
+            int bestAction = -1;
+            for (int a : validActions) {
+                if (qvals[a].item<float>() > maxQ) {
+                    maxQ = qvals[a].item<float>();
+                    bestAction = a;
+                }
+            }
+            action = bestAction;
+        }
+
+        int nx = x + dx[action];
+        int ny = y + dy[action];
+
+        // Check walls / bounds
+        if (nx < 0 || nx >= w || ny < 0 || ny >= h || (grid[y][x] & dir[action]) == 0) {
+            std::cout << "Hit wall!\n";
+            // stuck, terminate early
+            break;
+        }
+
+        x = nx; y = ny;
+        path.push_back({x, y});
+        step++;
+        if (x == w - 1 && y == h - 1) {
+            // reach goal, terminate 
+            visitOrder[y][x] = count++;
+            break;
+        }
+    }
+
+    return (x == w - 1 && y == h - 1);
 }
 
 

@@ -9,7 +9,7 @@ MazeGenerator::MazeGenerator(int width, int height, double monteCarloCarveProbab
     grid.assign(h, std::vector<int>(w, 0));
 }
 
-void MazeGenerator::generate() {
+void MazeGenerator::generate(bool verbose) {
     std::mt19937 rng(std::random_device{}());
 
     // Direction helpers: N,S,E,W
@@ -46,14 +46,18 @@ void MazeGenerator::generate() {
 
     // Start DFS from top-left
     dfs(0, 0);
-    std::cout << "Generated Perfect Maze with DFS Backtracking:\n";
-    print();
+    if (verbose) {
+        std::cout << "Generated Perfect Maze with DFS Backtracking:\n";
+        print();
+    }
 
     // Monte Carlo carving
     monteCarloCarve(p);
 
-    std::cout << "Generated Maze after Monte Carlo Carving:\n";
-    print();
+    if (verbose) {
+        std::cout << "Generated Maze after Monte Carlo Carving:\n";
+        print();
+    }
 }
 
 void MazeGenerator::monteCarloCarve(double probability) {
