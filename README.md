@@ -96,4 +96,4 @@ This executable produces a trained model file `dqn_maze_weights.pt` which is the
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE(LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
