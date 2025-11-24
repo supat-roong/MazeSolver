@@ -3,6 +3,7 @@
 **MazeSolver** is a C++ project for generating and solving mazes using classical algorithms as well as machine learning (DQN). It provides a flexible framework to experiment with maze generation, solving strategies, and reinforcement learning for pathfinding.  
 
 ---
+![maze_solver](https://github.com/user-attachments/assets/c5417e9a-c7d3-46eb-be16-2e9f87518b28)
 
 ## Features
 
