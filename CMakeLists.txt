@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 project(MazeSolver)
 
 
@@ -7,13 +7,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ---- LibTorch ----
 # Change this to your LibTorch path
-# set(Torch_DIR "/path/to/libtorch/share/cmake/Torch")
-set(Torch_DIR "/Users/supat/workspace/project/libtorch/share/cmake/Torch")
+set(Torch_DIR "/path/to/libtorch/share/cmake/Torch")
 find_package(Torch REQUIRED)
 
 # ---- Optional: Eigen ----
 # find_package(Eigen3 REQUIRED)
 # include_directories(${EIGEN3_INCLUDE_DIR})
+
+# ---- Include nlohmann_json from homebrew ----
+include_directories("/opt/homebrew/include")
+find_package(nlohmann_json CONFIG REQUIRED)
+
 
 # ---- Sources ----
 set(SOURCES
@@ -27,8 +31,8 @@ set(SOURCES
 add_executable(MazeSolver src/main.cpp src/MazeGenerator.cpp src/MazeSolver.cpp src/HumanEyeSolver.cpp src/DQN.cpp)
 add_executable(TrainDQN src/trainDQN.cpp src/MazeGenerator.cpp src/MazeSolver.cpp src/HumanEyeSolver.cpp src/DQN.cpp src/ReplayBuffer.cpp)
 
-target_include_directories(MazeSolver PRIVATE include)
-target_include_directories(TrainDQN PRIVATE include)
+target_include_directories(MazeSolver PRIVATE include nlohmann_json::nlohmann_json)
+target_include_directories(TrainDQN PRIVATE include nlohmann_json::nlohmann_json)
 
 target_link_libraries(MazeSolver "${TORCH_LIBRARIES}")
 target_link_libraries(TrainDQN "${TORCH_LIBRARIES}")

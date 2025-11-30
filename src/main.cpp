@@ -5,37 +5,39 @@
 #include "MazeSolver.hpp"
 #include <iostream>
 #include <cstdlib>
+#include <fstream>
+#include <nlohmann/json.hpp>
 
-int main(int argc, char* argv[]) {
-    int width = 20;
-    int height = 20;
-    double monteCarloCarveProbability = 0.1;
-    int maxDepth=4;
-    int inputSize = 4*maxDepth*3+2;
-    int hiddenSize = 64;
-    int numActions = 4;
+using json = nlohmann::json;
 
-    // Parse maze parameters from command-line arguments
-    if (argc >= 2) {
-        int w = std::atoi(argv[1]);
-        if (w > 0) width = w;
+int main() {
+    // ---------------------
+    // --- JSON CONFIG -----
+    // ---------------------
+    std::ifstream f("../config/config.json");
+    if (!f.is_open()) {
+        std::cerr << "Cannot open config.json";
+        return 1;
     }
-    
-    if (argc >= 3) {
-        int h = std::atoi(argv[2]);
-        if (h > 0) height = h;
-    }
-    
-    if (argc >= 4) {
-        double p = std::atof(argv[3]);
-        if (p >= 0.0 && p <= 1.0) monteCarloCarveProbability = p;
-    }
+    json cfg = json::parse(f);
+
+    const int width = cfg["maze"]["width"];
+    const int height = cfg["maze"]["height"];
+    const double monteCarloCarveProbability = cfg["maze"]["monteCarloCarveProbability"];
+
+    const int maxDepth = cfg["agent"]["maxDepth"];
+    const int numActions = cfg["agent"]["numActions"];
+    const int hiddenSize = cfg["agent"]["hiddenSize"];
+    const std::string ckptPath = cfg["agent"]["ckptPath"];
+
+    const int inputSize = 4*maxDepth*3+2;
+
 
     // ----- Load model for testing -----
     HumanEyeSolver agent(maxDepth);
     DQN testNet(inputSize, hiddenSize, numActions); // new instance
     torch::serialize::InputArchive in_archive;
-    in_archive.load_from("dqn_maze_weights.pt");
+    in_archive.load_from(ckptPath);
     testNet->load(in_archive);
     std::cout << "Loaded trained weights\n";
 

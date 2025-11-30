@@ -91,6 +91,8 @@ This executable produces a trained model file `dqn_maze_weights.pt` which is the
 
 - [libtorch](https://docs.pytorch.org/cppdocs/installing.html) (C++ PyTorch library)
 
+- [nlohmann/json](https://github.com/nlohmann/json) (C++ header-only JSON library)
+
 - C++17 compatible compiler
 
 - CMake ≥ 3.12

@@ -1,0 +1,23 @@
+{
+    "maze": {
+        "width": 5,
+        "height": 5,
+        "monteCarloCarveProbability": 0.2
+    },
+    "agent": {
+        "maxDepth": 4,
+        "numActions": 4,
+        "hiddenSize": 64,
+        "ckptPath": "ckpt/dqn_maze_weights.pt"
+    },
+    "dqn": {
+        "epsilon_start": 1.0,
+        "epsilon_min": 0.05,
+        "epsilon_decay": 0.995,
+        "gamma": 0.99,
+        "episodes": 10000,
+        "batchSize": 64,
+        "bufferSize": 10000,
+        "bufferUpdateEp": 100
+    }
+}

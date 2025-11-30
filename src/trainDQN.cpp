@@ -5,18 +5,44 @@
 #include "ReplayBuffer.hpp"
 #include <torch/torch.h>
 #include <torch/serialize.h>
-#include <random>
 #include <iostream>
+#include <nlohmann/json.hpp>
+#include <fstream>
+#include <filesystem>
+
+using json = nlohmann::json;
 
 int main(){
-    const int width=5, height=5;
-    const double p=0.2;
-    const int maxDepth=4;
+    // ---------------------
+    // --- JSON CONFIG -----
+    // ---------------------
+    std::ifstream f("../config/config.json");
+    if (!f.is_open()) {
+        std::cerr << "Cannot open config.json";
+        return 1;
+    }
+    json cfg = json::parse(f);
+
+    const int width      = cfg["maze"]["width"];
+    const int height     = cfg["maze"]["height"];
+    const double p       = cfg["maze"]["monteCarloCarveProbability"];
+
+    const int maxDepth   = cfg["agent"]["maxDepth"];
+    const int numActions = cfg["agent"]["numActions"];
+    const int hiddenSize = cfg["agent"]["hiddenSize"];
+    const std::string ckptPath = cfg["agent"]["ckptPath"];
+
+    float epsilon        = cfg["dqn"]["epsilon_start"];
+    const float epsilon_min   = cfg["dqn"]["epsilon_min"];
+    const float epsilon_decay = cfg["dqn"]["epsilon_decay"];
+    float gamma          = cfg["dqn"]["gamma"];
+    const int episodes   = cfg["dqn"]["episodes"];
+    const int batchSize  = cfg["dqn"]["batchSize"];
+    const int bufferSize = cfg["dqn"]["bufferSize"];
+    const int bufferUpdateEp = cfg["dqn"]["bufferUpdateEp"];
 
     HumanEyeSolver agent(maxDepth);
     const int inputSize = 4*maxDepth*3+2;
-    const int hiddenSize = 64;
-    const int numActions = 4;
 
     DQN policyNet(inputSize, hiddenSize, numActions);
     torch::optim::Adam optimizer(policyNet->parameters(), torch::optim::AdamOptions(0.001));
@@ -27,16 +53,8 @@ int main(){
     float totalReward = 0.0f;              
     static float rewardAccumulator = 0.0f;  
 
-    const int episodes=10000;
     const int maxSteps=width*height*2;
-    float epsilon = 1.0f;       // start fully random
-    const float epsilon_min = 0.05f;
-    const float epsilon_decay = 0.995f;  // decay per episode
-    float gamma=0.99f;
-
-    const int batchSize = 64;
-    const int bufferSize = 10000;
-    const int bufferUpdateEp = 100;           
+      
     ReplayBuffer replay(bufferSize);          
 
     for(int ep=0; ep<episodes; ep++){
@@ -218,16 +236,24 @@ int main(){
 
     std::cout<<"Training finished\n";
 
+    // --- Create ckpt directory if not exist ---
+    std::filesystem::path path(ckptPath);
+    std::filesystem::path dir = path.parent_path();
+
+    if (!dir.empty() && !std::filesystem::exists(dir)) {
+        std::filesystem::create_directories(dir);
+    }
+
     // ----- Save model -----
     torch::serialize::OutputArchive out_archive;
     policyNet->save(out_archive);
-    out_archive.save_to("dqn_maze_weights.pt");
+    out_archive.save_to(ckptPath);
     std::cout << "Saved trained weights\n";
 
     // ----- Load model for testing -----
     DQN testNet(inputSize, hiddenSize, numActions); // new instance
     torch::serialize::InputArchive in_archive;
-    in_archive.load_from("dqn_maze_weights.pt");
+    in_archive.load_from(ckptPath);
     testNet->load(in_archive);
     std::cout << "Loaded trained weights\n";
 
